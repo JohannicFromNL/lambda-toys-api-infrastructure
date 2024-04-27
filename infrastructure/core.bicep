@@ -40,64 +40,15 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
           networkSecurityGroup: {
             id: networkSecurityGroup.id
           }
+          privateEndpointNetworkPolicies: 'Disabled'
         }
       }
     ]
   }
 }
 
-// resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2021-03-15' = {
-//   name: '${prefix}-cosmos-account'
-//   location: location
-//   properties: {
-//     consistencyPolicy: {
-//       defaultConsistencyLevel: 'Session'
-//     }
-//     locations: [
-//       {
-//         locationName: location
-//         failoverPriority: 0
-//       }
-//     ]
-//     databaseAccountOfferType: 'Standard'
-//     enableMultipleWriteLocations: false
-//     capabilities: [
-//       {
-//         name: 'EnableServerless'
-//       }
-//     ]
-//   }
-// }
-
-// resource sqlDb 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-06-15' = {
-//   name: '${prefix}-cosmos-account/${prefix}-sqlDb'
-//   properties: {
-//     resource: {
-//       id: '${prefix}-sqlDb'
-//     }
-//     options: {}
-//   }
-// }
-
-// resource sqlContainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-06-15' = {
-//   parent: sqlDb
-//   name: '${prefix}-orders'
-//   properties: {
-//     resource: {
-//       id: '${prefix}-orders'
-//       partitionKey: {
-//         paths: [
-//           'paths'
-//           '/id'
-//         ]
-//       }
-//     }
-//     options: {}
-//   }
-// }
-
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2021-03-15' = {
-  name: '${prefix}-cosmos-account'
+  name: '${prefix}-cosmos-account-01'
   location: location
   kind: 'GlobalDocumentDB'
   properties: {
@@ -147,18 +98,41 @@ resource sqlContainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/co
   }
 }
 
-// resource stateContainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-06-15' = {
-//   parent: sqlDb 
-//   name: '${prefix}-state'
-//   properties: {
-//     resource: {
-//       id: '${prefix}-state'
-//       partitionKey: {
-//         paths: [
-//           '/partitionKey'
-//         ]
-//       }
-//     }
-    
-//   }
-// }
+
+resource cosmosPrivateDns 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+name: 'privatelink.documents.azure.com'
+location: 'global'
+}
+
+resource cosmosPrivateDnsNetworkLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  name: '${prefix}-cosmos-dns-link'
+location: 'global'
+parent: cosmosPrivateDns
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: virtualNetwork.id
+    }
+  }
+}
+
+resource cosmosPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-09-01' = {
+  name: '${prefix}-cosmos-pe'
+  location: location
+  properties: {
+    subnet: {
+      id: virtualNetwork.properties.subnets[0].id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: '${prefix}-cosmos-pe'
+        properties: {
+          privateLinkServiceId: cosmosDbAccount.id
+          groupIds: [
+            'Sql'
+          ]
+        }
+      }
+    ]
+  }
+}
