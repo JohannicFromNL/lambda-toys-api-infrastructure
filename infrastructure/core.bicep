@@ -1,8 +1,8 @@
 @description('Mandatory: Location of the resources, this is temp and will be fixed in the future with configuration files')
-param location string 
+param location string
 
 @description('Mandatory: Prefix for the resources, this is temp and will be fixed in the future with configuration files')
-param prefix string 
+param prefix string
 
 @description('Mandatory: VNet and subnet settings settings')
 param vnetSettings object = {
@@ -43,5 +43,55 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
         }
       }
     ]
+  }
+}
+
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2021-03-15' = {
+  name: '${prefix}-cosmos-account'
+  location: location
+  properties: {
+    consistencyPolicy: {
+      defaultConsistencyLevel: 'Session'
+    }
+    locations: [
+      {
+        locationName: location
+        failoverPriority: 0
+      }
+    ]
+    databaseAccountOfferType: 'Standard'
+    enableMultipleWriteLocations: false
+    capabilities: [
+      {
+        name: 'EnableServerless'
+      }
+    ]
+  }
+}
+
+resource sqlDb 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-06-15' = {
+  name: '${prefix}-cosmos-account/${prefix}-sqlDb'
+  properties: {
+    resource: {
+      id: '${prefix}-sqlDb'
+    }
+    options: {}
+  }
+}
+
+resource sqlContainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-06-15' = {
+  parent: sqlDb
+  name: '${prefix}-orders'
+  properties: {
+    resource: {
+      id: '${prefix}-orders'
+      partitionKey: {
+        paths: [
+          'paths'
+          '/id'
+        ]
+      }
+    }
+    options: {}
   }
 }
