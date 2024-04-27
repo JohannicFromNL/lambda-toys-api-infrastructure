@@ -1,5 +1,10 @@
-param location string = 'Westeurope'
-param prefix string = 'lmbd-dev'
+@description('Mandatory: Location of the resources, this is temp and will be fixed in the future with configuration files')
+param location string 
+
+@description('Mandatory: Prefix for the resources, this is temp and will be fixed in the future with configuration files')
+param prefix string 
+
+@description('Mandatory: VNet and subnet settings settings')
 param vnetSettings object = {
   addressPrefixes: [
     '10.0.0.0/20'
