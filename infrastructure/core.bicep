@@ -1,5 +1,5 @@
-param location string
-param prefix string
+param location string = 'Westeurope'
+param prefix string = 'lmbd-dev'
 param vnetSettings object = {
   addressPrefixes: [
     '10.0.0.0/20'
