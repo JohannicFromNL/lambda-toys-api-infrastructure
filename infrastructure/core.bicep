@@ -14,6 +14,14 @@ param vnetSettings object = {
       name: 'subnet1'
       addressPrefix: '10.0.0.0/22'
     }
+    {
+      name: 'acaAppSubnet'
+      addressPrefix: '10.0.4.0/22'
+    }
+    {
+      name: 'acaControlPlanesubnet'
+      addressPrefix: '10.0.8.0/22'
+    }
   ]
 }
 
